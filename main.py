@@ -20,6 +20,23 @@ headers = {
 }
 
 
+# decorator function to do 3 times retries
+def web_try(Func):
+    def action(*args, **kwds):
+        _retry_cnt = 3
+        while _retry_cnt > 0:
+            try:
+                return Func(*args, **kwds)
+                break
+            except:
+                print('exception count down')
+                _retry_cnt -= 1
+        else:
+            print('too many retries, abort mission!')
+            raise RuntimeError('network error')
+    return action
+
+
 def get_code(location):
     """
     获取登录code
@@ -29,6 +46,7 @@ def get_code(location):
     return code
 
 
+@web_try
 def login(_user, password):
     """
     登录
@@ -36,7 +54,7 @@ def login(_user, password):
     url1 = "https://api-user.huami.com/registrations/+86" + _user + "/tokens"
     _headers = {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "User-Agent": "MiFit/4.6.0 (iPhone; iOS 14.0.1; Scale/2.00)"
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2"
     }
     data1 = {
         "client_id": "HuaMi",
@@ -49,6 +67,22 @@ def login(_user, password):
         location = r1.headers["Location"]
         code = get_code(location)
     except:
+        import pprint
+        def dump_request_and_response(r: requests.Response):
+            # --- Response part ---
+            print("\n=== Response ===")
+            print(f"Status code: {r.status_code}")
+            print("Headers:")
+            pprint.pprint(dict(r.headers))
+            print("Body:")
+            # You might want to limit the size printed for large bodies
+            try:
+                print(r.text)
+            except Exception as e:
+                # fallback to raw bytes
+                print("Could not decode response text:", e)
+                print(r.content)
+        dump_request_and_response(r1)
         return 0, 0
     # print("access_code获取成功！")
     # print(code)
@@ -97,6 +131,9 @@ def main(_user, _passwd, _step):
     t = get_time()
 
     app_token = get_app_token(login_token)
+    if not app_token:
+        print('failed.')
+        exit(0)
 
     today = time.strftime("%F")
 
@@ -308,12 +345,10 @@ def get_time():
     """
     获取时间戳
     """
-    url = 'http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp'
-    response = requests.get(url, headers=headers).json()
-    t = response['data']['t']
-    return t
+    return round(time.time() * 1000)
 
 
+@web_try
 def get_app_token(login_token):
     """
     获取app_token
@@ -322,12 +357,20 @@ def get_app_token(login_token):
           f"?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com" \
           f"&login_token={login_token}"
     response = requests.get(url, headers=headers).json()
-    app_token = response['token_info']['app_token']
+    token_info=response.get('token_info', 0)
+    if not token_info:
+        print(response)
+        return 0
+    app_token = token_info.get('app_token', 0)
+    if not app_token:
+        print(response)
+        return 0
     # print("app_token获取成功！")
     # print(app_token)
     return app_token
 
 
+@web_try
 def push_wx(_sckey, desp=""):
     """
     推送server酱
@@ -350,6 +393,7 @@ def push_wx(_sckey, desp=""):
             print(f"[{now}] 推送失败：{json_data['errno']}({json_data['errmsg']})")
 
 
+@web_try
 def push_server(_sckey, desp=""):
     """
     推送消息到微信
@@ -372,6 +416,7 @@ def push_server(_sckey, desp=""):
             print(f"[{now}] 推送失败：{json_data['code']}({json_data['message']})")
 
 
+@web_try
 def push_pushplus(token, content=""):
     """
     推送消息到pushplus
@@ -395,6 +440,7 @@ def push_pushplus(token, content=""):
             print(f"[{now}] 推送失败：{json_data['code']}({json_data['message']})")
 
 
+@web_try
 def push_tg(token, chat_id, desp=""):
     """
     推送消息到TG
@@ -419,6 +465,7 @@ def push_tg(token, chat_id, desp=""):
             print(f"[{now}] 推送失败：{json_data['error_code']}({json_data['description']})")
 
 
+@web_try
 def wxpush(msg, usr, corpid, corpsecret, agentid=1000002):
     """
     企业微信推送
@@ -564,24 +611,23 @@ if __name__ == "__main__":
         user = sys.argv[3]
         # 登录密码
         passwd = sys.argv[4]
-        # 要修改的步数，直接输入想要修改的步数值，0为随机步数
-        step = sys.argv[5].replace('[', '').replace(']', '')
     except IndexError as e:
         print("参数有误: " + str(e))
         exit(1)
 
+    from datetime import datetime
+    from pytz import timezone
+    CST=timezone('Asia/Shanghai')
+    base=datetime.now(CST).hour - 6
+    step=base * random.randint(1834, 2166)
+
     user_list = user.split('#')
     passwd_list = passwd.split('#')
-    setp_array = step.split('-')
 
     if len(user_list) == len(passwd_list):
         to_push.push_msg = ''
         for user, passwd in zip(user_list, passwd_list):
-            if len(setp_array) == 2:
-                step = str(random.randint(int(setp_array[0]), int(setp_array[1])))
-                print(f"已设置为随机步数（{setp_array[0]}-{setp_array[1]}）")
-            elif str(step) == '0':
-                step = ''
+            print(f"已设置为随机步数（{step}）")
             to_push.push_msg += main(user, passwd, step) + '\n'
 
         push = {
