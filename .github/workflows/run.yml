@@ -1,12 +1,12 @@
 name: 刷步数
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
   schedule:
-    - cron: 0 10 * * *
+    - cron: '0 0,2,4,6,8,10,12 * * *'
   watch:
     types: started
 
@@ -23,11 +23,10 @@ jobs:
           python-version: 3.7
       - name: 开始
         run: |
-          pip install requests
+          pip install requests pytz
           pmode='${{ secrets.PMODE }}'
           pkey='${{ secrets.PKEY }}'
           user='${{ secrets.USER }}'
           pwd='${{ secrets.PWD }}'
-          step='${{ secrets.STEP }}'
 
-          python3 main.py ${pmode} ${pkey} ${user} ${pwd} ${step}
+          python3 main.py ${pmode} ${pkey} ${user} ${pwd}
