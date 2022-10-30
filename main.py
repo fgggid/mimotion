@@ -20,6 +20,23 @@ headers = {
 }
 
 
+# decorator function to do 3 times retries
+def web_try(Func):
+    def action(*args, **kwds):
+        _retry_cnt = 3
+        while _retry_cnt > 0:
+            try:
+                return Func(*args, **kwds)
+                break
+            except:
+                print('exception count down')
+                _retry_cnt -= 1
+        else:
+            print('too many retries, abort mission!')
+            raise RuntimeError('network error')
+    return action
+
+
 def get_code(location):
     """
     获取登录code
@@ -29,6 +46,7 @@ def get_code(location):
     return code
 
 
+@web_try
 def login(_user, password):
     """
     登录
@@ -304,6 +322,7 @@ def main(_user, _passwd, _step):
     return result
 
 
+@web_try
 def get_time():
     """
     获取时间戳
@@ -314,6 +333,7 @@ def get_time():
     return t
 
 
+@web_try
 def get_app_token(login_token):
     """
     获取app_token
@@ -328,6 +348,7 @@ def get_app_token(login_token):
     return app_token
 
 
+@web_try
 def push_wx(_sckey, desp=""):
     """
     推送server酱
@@ -350,6 +371,7 @@ def push_wx(_sckey, desp=""):
             print(f"[{now}] 推送失败：{json_data['errno']}({json_data['errmsg']})")
 
 
+@web_try
 def push_server(_sckey, desp=""):
     """
     推送消息到微信
@@ -372,6 +394,7 @@ def push_server(_sckey, desp=""):
             print(f"[{now}] 推送失败：{json_data['code']}({json_data['message']})")
 
 
+@web_try
 def push_pushplus(token, content=""):
     """
     推送消息到pushplus
@@ -395,6 +418,7 @@ def push_pushplus(token, content=""):
             print(f"[{now}] 推送失败：{json_data['code']}({json_data['message']})")
 
 
+@web_try
 def push_tg(token, chat_id, desp=""):
     """
     推送消息到TG
@@ -419,6 +443,7 @@ def push_tg(token, chat_id, desp=""):
             print(f"[{now}] 推送失败：{json_data['error_code']}({json_data['description']})")
 
 
+@web_try
 def wxpush(msg, usr, corpid, corpsecret, agentid=1000002):
     """
     企业微信推送
@@ -567,12 +592,12 @@ if __name__ == "__main__":
     except IndexError as e:
         print("参数有误: " + str(e))
         exit(1)
-        
+
     from datetime import datetime
     from pytz import timezone
     CST=timezone('Asia/Shanghai')
-    base=datetime.now(CST).hour - 7
-    step=random.randint(base * 1400, base * 1800)
+    base=datetime.now(CST).hour - 6
+    step=base * random.randint(1834, 2166)
 
     user_list = user.split('#')
     passwd_list = passwd.split('#')

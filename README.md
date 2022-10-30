@@ -1,9 +1,3 @@
-# Mimotion
-# 请不要点自己项目的 Create pull request 不要提起无意义的pr，否则你将会被我拉黑！
-# 请不要点自己项目的 Create pull request 不要提起无意义的pr，否则你将会被我拉黑！
-# 请不要点自己项目的 Create pull request 不要提起无意义的pr，否则你将会被我拉黑！
-# 小米运动自动刷步数
-
 > 小米运动自动刷步数
 
 ## Github Actions 部署指南
@@ -76,11 +70,3 @@
 8. TG推送教程 [点我](./TG_PUSH.md)
 
 9. 请注意，账号不是 [小米账号]，而是 [小米运动] 的账号。
-
-## 纪念一下往日的辉煌
-
-[![](https://i.loli.net/2021/11/19/BLi5cpjPSxh7Am2.png)](https://i.loli.net/2021/11/19/BLi5cpjPSxh7Am2.png)
-
-## 历史Star数
-
-[![Stargazers over time](https://starchart.cc/577fkj/mimotion.svg)](https://starchart.cc/577fkj/mimotion)
