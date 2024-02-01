@@ -116,7 +116,8 @@ def main(_user, _passwd, _step):
 
     app_token = get_app_token(login_token)
     if not app_token:
-        exit(1)
+        print('failed.')
+        exit(0)
 
     today = time.strftime("%F")
 
