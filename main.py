@@ -115,6 +115,8 @@ def main(_user, _passwd, _step):
     t = get_time()
 
     app_token = get_app_token(login_token)
+    if not app_token:
+        exit(1)
 
     today = time.strftime("%F")
 
@@ -342,7 +344,14 @@ def get_app_token(login_token):
           f"?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com" \
           f"&login_token={login_token}"
     response = requests.get(url, headers=headers).json()
-    app_token = response['token_info']['app_token']
+    token_info=response.get('token_info', 0)
+    if not token_info:
+        print(response)
+        return 0
+    app_token = token_info.get('app_token', 0)
+    if not app_token:
+        print(response)
+        return 0
     # print("app_token获取成功！")
     # print(app_token)
     return app_token
