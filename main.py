@@ -325,15 +325,11 @@ def main(_user, _passwd, _step):
     return result
 
 
-@web_try
 def get_time():
     """
     获取时间戳
     """
-    url = 'http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp'
-    response = requests.get(url, headers=headers).json()
-    t = response['data']['t']
-    return t
+    return round(time.time() * 1000)
 
 
 @web_try
